@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
-  <title>Panorama salonu (test) – ul. Sprawna, Białołęka</title>
+  <title>Panoramy salonu – ul. Sprawna, Białołęka</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
   <style>
     html, body { margin: 0; height: 100%; background: #1b1714; font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif; }
@@ -14,6 +14,10 @@
     .tag { background: rgba(251, 248, 243, .94); color: #23292e; padding: .55rem 1rem; border-radius: 999px; font-weight: 600; font-size: .95rem; box-shadow: 0 4px 16px rgba(0,0,0,.25); }
     .back { background: #a0612b; color: #fff; text-decoration: none; padding: .55rem 1.1rem; border-radius: 999px; font-weight: 600; font-size: .95rem; box-shadow: 0 4px 16px rgba(0,0,0,.25); }
     .hint { position: absolute; z-index: 10; bottom: 16px; left: 50%; transform: translateX(-50%); background: rgba(20, 16, 12, .7); color: #fff; padding: .5rem 1rem; border-radius: 999px; font-size: .9rem; white-space: nowrap; }
+    .scenes { position: absolute; z-index: 10; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: .5rem; flex-wrap: wrap; justify-content: center; width: max-content; max-width: calc(100% - 24px); }
+    .scenes button { font: inherit; font-weight: 600; font-size: .92rem; border: 0; cursor: pointer; padding: .6rem 1.1rem; border-radius: 999px; background: rgba(251, 248, 243, .94); color: #23292e; box-shadow: 0 4px 16px rgba(0,0,0,.3); }
+    .scenes button.active { background: #a0612b; color: #fff; }
+    .hint { bottom: 78px !important; }
     .short { display: none; }
     @media (max-width: 600px) { .long { display: none; } .short { display: inline; } }
   </style>
@@ -21,40 +25,45 @@
 <body>
   <div id="pano"></div>
   <div class="bar">
-    <span class="tag">Salon – panorama</span>
+    <span class="tag">Salon – panoramy</span>
     <a class="back" href="./#plan">← <span class="long">Wróć do ogłoszenia</span><span class="short">Wróć</span></a>
+  </div>
+  <div class="scenes">
+    <button data-scene="kuchnia">Jadalnia · kuchnia · kominek</button>
+    <button data-scene="ogrod">Ogród · schody</button>
   </div>
   <div class="hint">Przeciągnij, aby się rozejrzeć</div>
 
   <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
   <script>
-    // Partial panorama stitched from 3 photos (24 mm equiv.) – about 90° × 60° field of view.
-    // Keep the vertical field of view inside the 59° the photos cover, so no black bars on portrait screens.
-    const VAOV = 59;
-    const fitHfov = () => {
-      const r = window.innerWidth / window.innerHeight;
-      const vf = VAOV * Math.PI / 180 * 0.97;
-      return Math.min(80, 2 * Math.atan(Math.tan(vf / 2) * r) * 180 / Math.PI);
+    // Two partial panoramas stitched from 24 mm-equivalent photos; angles computed from the stitch.
+    const SCENES = {
+      ogrod:   { title: 'Widok na ogród i schody',          panorama: 'img/pano-salon.jpg',         haov: 89.4,  vaov: 58.9 },
+      kuchnia: { title: 'Widok na jadalnię, kuchnię i kominek', panorama: 'img/pano-salon-kuchnia.jpg', haov: 105.1, vaov: 75.8 }
     };
-    const viewer = pannellum.viewer('pano', {
-      type: 'equirectangular',
-      panorama: 'img/pano-salon.jpg',
-      haov: 89,
-      vaov: VAOV,
-      hfov: fitHfov(),
-      minHfov: 20,
-      maxHfov: fitHfov(),
-      yaw: 0,
-      minYaw: -44.5,
-      maxYaw: 44.5,
-      minPitch: -29.5,
-      maxPitch: 29.5,
-      autoLoad: true,
-      showFullscreenCtrl: true,
-      compass: false,
-      mouseZoom: true
+    const maxH = sc => {
+      const r = window.innerWidth / window.innerHeight;
+      const vf = sc.vaov * Math.PI / 180 * 0.97;
+      return Math.min(sc.haov * 0.97, 2 * Math.atan(Math.tan(vf / 2) * r) * 180 / Math.PI);
+    };
+    const cfg = { default: { firstScene: 'kuchnia', autoLoad: true, showFullscreenCtrl: true, mouseZoom: true, sceneFadeDuration: 600 }, scenes: {} };
+    for (const [id, sc] of Object.entries(SCENES)) {
+      cfg.scenes[id] = {
+        type: 'equirectangular', panorama: sc.panorama, haov: sc.haov, vaov: sc.vaov,
+        yaw: 0, hfov: maxH(sc), minHfov: 20, maxHfov: maxH(sc),
+        minYaw: -sc.haov / 2, maxYaw: sc.haov / 2, minPitch: -sc.vaov / 2, maxPitch: sc.vaov / 2
+      };
+    }
+    const viewer = pannellum.viewer('pano', cfg);
+    const btns = document.querySelectorAll('.scenes button');
+    const mark = id => btns.forEach(b => b.classList.toggle('active', b.dataset.scene === id));
+    btns.forEach(b => b.addEventListener('click', () => { if (viewer.getScene() !== b.dataset.scene) viewer.loadScene(b.dataset.scene); }));
+    viewer.on('scenechange', mark);
+    mark('kuchnia');
+    window.addEventListener('resize', () => {
+      const sc = SCENES[viewer.getScene()], h = maxH(sc);
+      viewer.setHfovBounds([20, h]); if (viewer.getHfov() > h) viewer.setHfov(h, false);
     });
-    window.addEventListener('resize', () => { const h = fitHfov(); viewer.setHfovBounds([20, h]); if (viewer.getHfov() > h) viewer.setHfov(h, false); });
     setTimeout(() => { const h = document.querySelector('.hint'); if (h) h.style.display = 'none'; }, 6000);
   </script>
 </body>
