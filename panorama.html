@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Panorama salonu (test) – ul. Sprawna, Białołęka</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
+  <style>
+    html, body { margin: 0; height: 100%; background: #1b1714; font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif; }
+    #pano { position: absolute; inset: 0; }
+    .bar { position: absolute; z-index: 10; top: 12px; left: 56px; right: 12px; display: flex; justify-content: space-between; align-items: center; gap: .6rem; pointer-events: none; }
+    .bar > * { pointer-events: auto; }
+    .tag { background: rgba(251, 248, 243, .94); color: #23292e; padding: .55rem 1rem; border-radius: 999px; font-weight: 600; font-size: .95rem; box-shadow: 0 4px 16px rgba(0,0,0,.25); }
+    .back { background: #a0612b; color: #fff; text-decoration: none; padding: .55rem 1.1rem; border-radius: 999px; font-weight: 600; font-size: .95rem; box-shadow: 0 4px 16px rgba(0,0,0,.25); }
+    .hint { position: absolute; z-index: 10; bottom: 16px; left: 50%; transform: translateX(-50%); background: rgba(20, 16, 12, .7); color: #fff; padding: .5rem 1rem; border-radius: 999px; font-size: .9rem; white-space: nowrap; }
+    .short { display: none; }
+    @media (max-width: 600px) { .long { display: none; } .short { display: inline; } }
+  </style>
+</head>
+<body>
+  <div id="pano"></div>
+  <div class="bar">
+    <span class="tag">Salon – panorama</span>
+    <a class="back" href="./#plan">← <span class="long">Wróć do ogłoszenia</span><span class="short">Wróć</span></a>
+  </div>
+  <div class="hint">Przeciągnij, aby się rozejrzeć</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+  <script>
+    // Partial panorama stitched from 3 photos (24 mm equiv.) – about 90° × 60° field of view.
+    // Keep the vertical field of view inside the 59° the photos cover, so no black bars on portrait screens.
+    const VAOV = 59;
+    const fitHfov = () => {
+      const r = window.innerWidth / window.innerHeight;
+      const vf = VAOV * Math.PI / 180 * 0.97;
+      return Math.min(80, 2 * Math.atan(Math.tan(vf / 2) * r) * 180 / Math.PI);
+    };
+    const viewer = pannellum.viewer('pano', {
+      type: 'equirectangular',
+      panorama: 'img/pano-salon.jpg',
+      haov: 89,
+      vaov: VAOV,
+      hfov: fitHfov(),
+      minHfov: 20,
+      maxHfov: fitHfov(),
+      yaw: 0,
+      minYaw: -44.5,
+      maxYaw: 44.5,
+      minPitch: -29.5,
+      maxPitch: 29.5,
+      autoLoad: true,
+      showFullscreenCtrl: true,
+      compass: false,
+      mouseZoom: true
+    });
+    window.addEventListener('resize', () => { const h = fitHfov(); viewer.setHfovBounds([20, h]); if (viewer.getHfov() > h) viewer.setHfov(h, false); });
+    setTimeout(() => { const h = document.querySelector('.hint'); if (h) h.style.display = 'none'; }, 6000);
+  </script>
+</body>
+</html>
