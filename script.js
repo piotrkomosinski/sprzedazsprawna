@@ -8,32 +8,37 @@ chips.forEach(chip => chip.addEventListener('click', () => {
   items.forEach(a => a.classList.toggle('hide', f !== 'all' && a.dataset.cat !== f));
 }));
 
-// Lightbox (navigates only through currently visible photos)
+// Lightbox – shows any list of {href, caption}
 const lb = document.getElementById('lightbox');
 const lbImg = document.getElementById('lb-img');
 const lbCap = document.getElementById('lb-cap');
-let visible = [], idx = 0;
+let list = [], idx = 0, title = '';
 
 function show(i) {
-  idx = (i + visible.length) % visible.length;
-  const a = visible[idx];
-  lbImg.src = a.href;
-  lbImg.alt = a.dataset.caption || '';
-  lbCap.textContent = `${a.dataset.caption || ''}  ·  ${idx + 1} / ${visible.length}`;
-  const next = visible[(idx + 1) % visible.length];
-  new Image().src = next.href;
+  idx = (i + list.length) % list.length;
+  const p = list[idx];
+  lbImg.src = p.href;
+  lbImg.alt = p.caption;
+  const head = title && !p.caption.startsWith(title.split(' ')[0]) ? title + '  ·  ' : '';
+  lbCap.textContent = `${head}${p.caption}  ·  ${idx + 1} / ${list.length}`;
+  if (list.length > 1) new Image().src = list[(idx + 1) % list.length].href;
 }
-function open(a) {
-  visible = items.filter(x => !x.classList.contains('hide'));
+function openList(photos, start = 0, heading = '') {
+  list = photos; title = heading;
+  lb.classList.toggle('single', list.length < 2);
   lb.hidden = false;
   document.body.style.overflow = 'hidden';
-  show(visible.indexOf(a));
+  show(start);
 }
 function close() {
   lb.hidden = true;
   document.body.style.overflow = '';
 }
-items.forEach(a => a.addEventListener('click', e => { e.preventDefault(); open(a); }));
+items.forEach(a => a.addEventListener('click', e => {
+  e.preventDefault();
+  const vis = items.filter(x => !x.classList.contains('hide'));
+  openList(vis.map(x => ({ href: x.href, caption: x.dataset.caption || '' })), vis.indexOf(a));
+}));
 lb.querySelector('.lb-close').addEventListener('click', close);
 lb.querySelector('.lb-prev').addEventListener('click', () => show(idx - 1));
 lb.querySelector('.lb-next').addEventListener('click', () => show(idx + 1));
@@ -52,6 +57,33 @@ lb.addEventListener('touchend', e => {
   if (Math.abs(dx) > 50) show(idx + (dx < 0 ? 1 : -1));
   touchX = null;
 });
+
+// Clickable floor plan: room -> its photos
+const ROOMS = window.ROOMS || {};
+const roomLabel = r => r.name.startsWith('Sypialnia') ? r.name.replace(' · ', ' ') : r.name.split(' · ')[0];
+function openRoom(id) {
+  const r = ROOMS[id];
+  if (!r) return;
+  openList(r.photos.map(([f, c]) => ({ href: `img/${f}.jpg`, caption: c })), 0, roomLabel(r));
+}
+const roomEls = document.querySelectorAll('.plan-hotspots .room');
+roomEls.forEach(g => {
+  g.addEventListener('click', () => openRoom(g.dataset.room));
+  g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openRoom(g.dataset.room); } });
+});
+const chipsBox = document.getElementById('room-chips');
+if (chipsBox) {
+  Object.entries(ROOMS).forEach(([id, r]) => {
+    const b = document.createElement('button');
+    b.className = 'chip';
+    b.textContent = `${roomLabel(r)} (${r.photos.length})`;
+    b.addEventListener('click', () => openRoom(id));
+    const hl = on => document.querySelector(`.plan-hotspots .room[data-room="${id}"]`)?.classList.toggle('hl', on);
+    b.addEventListener('mouseenter', () => hl(true));
+    b.addEventListener('mouseleave', () => hl(false));
+    chipsBox.appendChild(b);
+  });
+}
 
 // Map
 if (window.L) {
