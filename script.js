@@ -1,13 +1,3 @@
-// Gallery filters
-const chips = document.querySelectorAll('.chip');
-const items = [...document.querySelectorAll('#gallery a')];
-chips.forEach(chip => chip.addEventListener('click', () => {
-  chips.forEach(c => c.classList.remove('active'));
-  chip.classList.add('active');
-  const f = chip.dataset.filter;
-  items.forEach(a => a.classList.toggle('hide', f !== 'all' && a.dataset.cat !== f));
-}));
-
 // Lightbox – shows any list of {href, caption}
 const lb = document.getElementById('lightbox');
 const lbImg = document.getElementById('lb-img');
@@ -34,11 +24,6 @@ function close() {
   lb.hidden = true;
   document.body.style.overflow = '';
 }
-items.forEach(a => a.addEventListener('click', e => {
-  e.preventDefault();
-  const vis = items.filter(x => !x.classList.contains('hide'));
-  openList(vis.map(x => ({ href: x.href, caption: x.dataset.caption || '' })), vis.indexOf(a));
-}));
 lb.querySelector('.lb-close').addEventListener('click', close);
 lb.querySelector('.lb-prev').addEventListener('click', () => show(idx - 1));
 lb.querySelector('.lb-next').addEventListener('click', () => show(idx + 1));
