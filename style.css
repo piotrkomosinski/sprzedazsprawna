@@ -83,13 +83,18 @@ p { margin: 0 0 1em; }
 
 .plan-img { position: relative; display: block; margin: 1rem auto 1rem; background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
 .plan-hint { margin: .2rem 0 0; font-size: 1.05rem; }
-.plan-hotspots { position: absolute; inset: 0; width: 100%; height: 100%; }
+.plan-full .plan-hotspots { position: absolute; inset: 0; width: 100%; height: 100%; }
 .plan-hotspots .room { cursor: pointer; outline: none; }
 .plan-hotspots .room polygon { fill: rgba(160, 97, 43, 0); stroke: rgba(160, 97, 43, 0); stroke-width: 6; transition: fill .2s, stroke .2s; }
 .plan-hotspots .room:hover polygon, .plan-hotspots .room:focus-visible polygon, .plan-hotspots .room.hl polygon { fill: rgba(160, 97, 43, .18); stroke: rgba(160, 97, 43, .9); }
 .plan-hotspots .badge circle { fill: var(--accent); stroke: #fff; stroke-width: 4; }
 .plan-hotspots .badge text { fill: #fff; font: 700 26px var(--sans); text-anchor: middle; }
 .plan-hotspots .room:hover .badge circle { fill: var(--accent-dark); }
+.plan-mobile { display: none; }
+.plan-tabs { display: flex; justify-content: center; flex-wrap: wrap; gap: .45rem; margin: .8rem 0 .8rem; }
+.plan-floor { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.plan-floor svg { display: block; width: 100%; height: auto; max-height: 78vh; }
+.plan-hotspots .badge.big text { font-size: 42px; }
 .room-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: .45rem; margin: 0 auto 1rem; max-width: 1000px; }
 .room-chips .chip { font-size: .88rem; padding: .4rem .9rem; }
 .rooms { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2.5rem; }
@@ -126,6 +131,9 @@ p { margin: 0 0 1em; }
 .lb-next { right: 1rem; top: 50%; transform: translateY(-50%); }
 
 @media (max-width: 1000px) {
+  .plan-full { display: none; }
+  .room-chips .chip.off-floor { display: none; }
+  .plan-mobile { display: block; max-width: 640px; margin: 0 auto 1rem; }
   .hero { flex-direction: column; align-items: stretch; min-height: 0; }
   .hero-img { position: relative; width: 100%; height: 46vh; min-height: 260px; }
   .hero-overlay { inset: auto 0 auto 0; top: calc(max(46vh, 260px) - 120px); height: 120px; background: linear-gradient(180deg, rgba(251, 248, 243, 0), var(--bg)); }
@@ -137,7 +145,6 @@ p { margin: 0 0 1em; }
   .topbar nav a:not(.btn) { display: none; }
 }
 @media (max-width: 600px) {
-  .plan-hotspots .badge { display: none; }
   .facts { grid-template-columns: repeat(2, 1fr); }
   .fact { border-right: 0; }
   .features, .why-list { grid-template-columns: 1fr; }

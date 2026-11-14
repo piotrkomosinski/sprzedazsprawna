@@ -56,19 +56,32 @@ roomEls.forEach(g => {
   g.addEventListener('click', () => openRoom(g.dataset.room));
   g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openRoom(g.dataset.room); } });
 });
+// Mobile: one floor at a time
+const floorTabs = document.querySelectorAll('.plan-tabs .chip');
+floorTabs.forEach(t => t.addEventListener('click', () => {
+  floorTabs.forEach(x => x.classList.toggle('active', x === t));
+  document.querySelectorAll('.plan-floor').forEach(f => { f.hidden = f.dataset.floor !== t.dataset.floor; });
+  filterChips(t.dataset.floor);
+}));
+function filterChips(floor) {
+  document.querySelectorAll('#room-chips .chip').forEach(c => c.classList.toggle('off-floor', c.dataset.floor !== floor));
+}
+
 const chipsBox = document.getElementById('room-chips');
 if (chipsBox) {
   Object.entries(ROOMS).forEach(([id, r]) => {
     const b = document.createElement('button');
     b.className = 'chip';
     b.textContent = `${roomLabel(r)} (${r.photos.length})`;
+    b.dataset.floor = document.querySelector(`.plan-floor .room[data-room="${id}"]`)?.closest('.plan-floor').dataset.floor || '';
     b.addEventListener('click', () => openRoom(id));
-    const hl = on => document.querySelector(`.plan-hotspots .room[data-room="${id}"]`)?.classList.toggle('hl', on);
+    const hl = on => document.querySelectorAll(`.plan-hotspots .room[data-room="${id}"]`).forEach(g => g.classList.toggle('hl', on));
     b.addEventListener('mouseenter', () => hl(true));
     b.addEventListener('mouseleave', () => hl(false));
     chipsBox.appendChild(b);
   });
 }
+  filterChips('parter');
 
 // Map
 if (window.L) {
